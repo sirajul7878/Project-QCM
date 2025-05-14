@@ -1,0 +1,82 @@
+from dataclasses import dataclass
+
+# Default Quality limits
+DEFAULT_LENGTH_RANGE = (9.5, 10.5)  # cm
+DEFAULT_WEIGHT_RANGE = (95.0, 105.0)  # grams
+
+@dataclass
+class Product:
+    id: int
+    name: str
+    length: float
+    weight: float
+    status: str = "Unchecked"
+
+    def check_quality(self, length_range, weight_range):
+        length_ok = length_range[0] <= self.length <= length_range[1]
+        weight_ok = weight_range[0] <= self.weight <= weight_range[1]
+        self.status = "PASS" if length_ok and weight_ok else "FAIL"
+        return self.status
+
+def get_quality_conditions():
+    print("Enter custom quality limits, or just press ENTER to use the defaults:")
+    try:
+        min_len = input(f"  Minimum length in cm [{DEFAULT_LENGTH_RANGE[0]}]: ")
+        max_len = input(f"  Maximum length in cm [{DEFAULT_LENGTH_RANGE[1]}]: ")
+        min_wt  = input(f"  Minimum weight in g   [{DEFAULT_WEIGHT_RANGE[0]}]: ")
+        max_wt  = input(f"  Maximum weight in g   [{DEFAULT_WEIGHT_RANGE[1]}]: ")
+
+        # parse or fallback to defaults
+        min_len = float(min_len) if min_len.strip() else DEFAULT_LENGTH_RANGE[0]
+        max_len = float(max_len) if max_len.strip() else DEFAULT_LENGTH_RANGE[1]
+        min_wt  = float(min_wt)  if min_wt.strip()  else DEFAULT_WEIGHT_RANGE[0]
+        max_wt  = float(max_wt)  if max_wt.strip()  else DEFAULT_WEIGHT_RANGE[1]
+
+        return (min_len, max_len), (min_wt, max_wt)
+    except ValueError:
+        print("Invalid entry detected — reverting to default ranges.")
+        return DEFAULT_LENGTH_RANGE, DEFAULT_WEIGHT_RANGE
+
+def run_quality_control(products, length_range, weight_range):
+    print("\nQUALITY CONTROL REPORT")
+    print("*" * 50)
+    passed = 0
+    for product in products:
+        result = product.check_quality(length_range, weight_range)
+        label = product.name or f"Product {product.id:02d}"
+        print(f"{label}: Length={product.length:.2f} cm, "
+              f"Weight={product.weight:.2f} g --> {result}")
+        if result == "PASS":
+            passed += 1
+    print("\nSUMMARY")
+    print(f"Total Products Checked: {len(products)}")
+    print(f"Passed: {passed}")
+    print(f"Failed: {len(products) - passed}")
+
+def main():
+    try:
+        count = int(input("Enter number of products to check: "))
+    except ValueError:
+        print("Invalid number. Exiting.")
+        return
+
+    length_range, weight_range = get_quality_conditions()
+
+    products = []
+    for i in range(1, count + 1):
+        print(f"\nDetails for product {i}:")
+        name = input("  Name (optional): ").strip()
+        try:
+            length = float(input("  Length (cm): "))
+            weight = float(input("  Weight (g): "))
+            products.append(Product(id=i, name=name, length=length, weight=weight))
+        except ValueError:
+            print("  Invalid measurement — this product will be skipped.")
+
+    if products:
+        run_quality_control(products, length_range, weight_range)
+    else:
+        print("No valid products entered.")
+
+if __name__ == "__main__":
+    main()w
